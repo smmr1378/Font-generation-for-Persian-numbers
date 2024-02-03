@@ -1,61 +1,73 @@
-# وارد کردن کتابخانه‌های مورد نیاز
+import os
 from PIL import Image, ImageDraw, ImageFont
+import numpy as np
 import easyocr
-def ocr_image_to_text(image_path):
-    reader = easyocr.Reader(['fa'])
-    result = reader.readtext(image_path)
-    
-    # Extract just the text from the OCR result
-    text = ' '.join([item[1] for item in result])
-    return text
-# ایجاد یک لیست از ارقام
-digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-# ایجاد یک لیست از اندازه‌های برچسب به سانتی‌متر
-sizes = [(5,3.5), (7.5, 5.5), (10, 7), (12.5, 8.5), (15, 10), (20, 15), (25, 20), (30, 25), (35, 30), (40,35)]
-# ایجاد یک لیست از رزولوشن‌ها به پیکسل بر اینچ
-resolutions = [(200, 200), (300, 300), (400, 400), (500, 500), (600, 600), (650,650), (700, 700), (800, 800), (900, 900), (950,950)]
-# عامل تبدیل اینچ به سانتی‌متر
-f = 2.54
-# رزولوشن قدیمی کد شما
-res_y_old = 28
-# تعریف نام فونت
-FONT_NAME = 'W_tahoma.ttf'
-# حلقه برای هر رقم
-for digit in digits:
-    # حلقه برای هر اندازه
-    for w_cm, h_cm in sizes:
-        # حلقه برای هر رزولوشن
-        for res_x, res_y in resolutions:
-            # محاسبه اندازه تصویر به پیکسل
-            w = int(w_cm / f * res_x)
-            h = int(h_cm / f * res_y)
-            # ایجاد یک تصویر جدید با اندازه و رنگ مشخص
-            img = Image.new('RGB', (w, h), color=(255, 255, 255))
-            # ایجاد یک شیء رسم
-            draw = ImageDraw.Draw(img)
-            # تعریف یک تابع برای رسم متن
-            def draw_text(x_cm, y_cm, font_size):
-                # بارگذاری فونت مورد نظر
-                font = ImageFont.truetype('fonts/W_tahoma.ttf', int(font_size / (res_y_old / res_y)))
-                # محاسبه مختصات متن به پیکسل
-                x, y = (int(x_cm / f * res_x), int(y_cm / f * res_y))
-                # رسم متن روی تصویر
-                draw.text((x, y), digit, font=font, fill=0, anchor='mm', align='center')
-            # رسم متن با مختصات و اندازه فونت مشخص
-            draw_text(w_cm / 2, h_cm / 2, 20)
-            # ذخیره تصویر با رزولوشن مشخص
-            img.save(digit + '_tahoma_' + str(w) + 'x' + str(h) + '.png', dpi=(res_x, res_y))
-            # Create an empty list to store the labels
-labels = []
-# Loop for each image
-for digit in digits:
-    # Loop for each size
-    for w_cm, h_cm in sizes:
-        # Loop for each resolution
-        for res_x, res_y in resolutions:
-            # Define the image name
-            image_name = digit + '_tahoma_' + str(w) + 'x' + str(h) + '.png'
-            # Use the OCR function to convert the image to text
-            text = ocr_image_to_text(image_name)
-            # Append the text to the list of labels
-            labels.append(text)
+import cv2
+import matplotlib.pyplot as plt
+
+def create_image(digits_list, width, height, resolution, font):
+    text = ' '.join(digits_list)
+    img = Image.new('RGB', (width, height), color=(255, 255, 255))
+    draw = ImageDraw.Draw(img)
+    draw.text((500, 100), text, font=font, fill=0, anchor='mm', align='center')
+    img = img.resize((width // resolution, height //
+                     resolution), Image.Resampling.LANCZOS)
+    img = img.resize((width, height), Image.Resampling.LANCZOS)
+
+    label = ''.join(digits_list)
+    img.save(f"output/{label}_{resolution}.png")
+
+if __name__ == '__main__':
+    os.makedirs('output', exist_ok=True)
+    digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    width = 1000
+    height = 200
+    font = ImageFont.truetype('fonts/W_tahoma.ttf', 128)
+    for i in range(10):
+        digits_list = digits.copy()
+        np.random.shuffle(digits_list)
+        for resolution in range(1, 11):
+            create_image(digits_list, width, height, resolution, font)
+
+# تعداد تصاویر را مشخص کنید
+num_images = 100
+
+# تصاویر، برچسب‌های واقعی و پیش‌بینی شده را بارگذاری کنید
+images = [] # لیستی از تصاویر به صورت آرایه‌های نامپای
+true_labels = [] # لیستی از برچسب‌های واقعی به صورت رشته
+pred_labels = [] # لیستی از برچسب‌های پیش‌بینی شده به صورت رشته
+
+image_path = 'D:\Python\produce-font\output'
+os.chdir(image_path)
+reader = easyocr.Reader(['fa'])
+for file in os.listdir():
+    if file.endswith(".png"):
+        file_path = os.path.join(image_path,file)
+        img = cv2.imread(file_path)
+        result = reader.readtext(img) 
+        for (box, text , score) in result:
+            print(f"{file} - {text}")
+            # اضافه کردن تصویر، برچسب واقعی و پیش‌بینی شده به لیست‌های مربوطه
+            images.append(img)
+            true_labels.append(file.split('_')[0])
+            pred_labels.append(text)
+
+# یک شکل با اندازه 10 در 10 ایجاد کنید
+plt.figure(figsize=(10, 10))
+
+# برای هر تصویر یک زیرشکل ایجاد کنید
+for i in range(num_images):
+    # انتخاب یک زیرشکل در سطر i // 5 و ستون i % 5
+    plt.subplot(5, 5, i + 1)
+    # حذف محورهای x و y
+    plt.xticks([])
+    plt.yticks([])
+    # نمایش تصویر
+    plt.imshow(images[i], cmap=plt.cm.binary)
+    # اگر برچسب واقعی و پیش‌بینی شده برابر بودند، رنگ متن را سبز کنید، در غیر این صورت قرمز
+    color = "green" if true_labels[i] == pred_labels[i] else "red"
+    # نمایش برچسب واقعی و پیش‌بینی شده در زیر تصویر
+    plt.xlabel(f"{true_labels[i]} ({pred_labels[i]})", color=color)
+
+# نمایش شکل
+plt.show()
