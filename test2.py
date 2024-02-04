@@ -1,10 +1,10 @@
 import os
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
-import pytesseract # از pytesseract به جای easyocr استفاده کنید
+import pytesseract 
 import cv2
 import matplotlib.pyplot as plt
-import seaborn as sns # از seaborn به جای matplotlib استفاده کنید
+import seaborn as sns 
 
 def create_image(digits_list, width, height, resolution, font):
     text = ' '.join(digits_list)
@@ -46,7 +46,7 @@ if __name__ == '__main__':
         if file.endswith(".png"):
             file_path = os.path.join(image_path,file)
             img = cv2.imread(file_path)
-            text = pytesseract.image_to_string(img, lang='fas') # از pytesseract به جای easyocr استفاده کنید
+            text = pytesseract.image_to_string(img, lang='fas') 
             print(f"{file} - {text}")
             # اضافه کردن تصویر، برچسب واقعی و پیش‌بینی شده به لیست‌های مربوطه
             images.append(img)
