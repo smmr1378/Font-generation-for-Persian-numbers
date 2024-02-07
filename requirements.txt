@@ -1,0 +1,4 @@
+easyocr
+pillow
+numpy
+unidecode

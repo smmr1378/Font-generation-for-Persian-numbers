@@ -5,7 +5,7 @@ import re
 
 
 def create_image(digits_list, width, height, resolution, font):
-    text = ' '.join(digits_list)
+    text = ''.join(digits_list)
     img = Image.new('RGB', (width, height), color=(255, 255, 255))
     draw = ImageDraw.Draw(img)
 
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     width = 1000
     height = 200
-    font = ImageFont.truetype('fonts/W_tahoma.ttf', 128)
+    font = ImageFont.truetype('fonts/B-NAZANIN.TTF', 128)
     for i in range(10):
         digits_list = digits.copy()
         np.random.shuffle(digits_list)

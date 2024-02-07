@@ -1,18 +1,19 @@
 import os
 import re
-import pytesseract
 from PIL import Image
+from unidecode import unidecode
+import easyocr
 
 
 def ocr_accuracy(true_text, ocr_text):
-  
     true_text = re.sub(r'\W+', '', true_text)
     ocr_text = re.sub(r'\W+', '', ocr_text)
 
     distance = levenshtein_distance(true_text, ocr_text)
-    
+
     accuracy = (1 - distance / max(len(true_text), len(ocr_text))) * 100
     return accuracy
+
 
 def levenshtein_distance(s1, s2):
     if len(s1) < len(s2):
@@ -31,26 +32,26 @@ def levenshtein_distance(s1, s2):
     return previous_row[-1]
 
 
-output_path = "D:\\Python\produce-font\\output"
+output_path = "output"
+reader = easyocr.Reader(['fa'])
 
 accuracy_scores = []
-pytesseract.pytesseract.tesseract_cmd = r'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
 
 for filename in os.listdir(output_path):
-   
     true_text = filename.split("_")[0]
-  
     image = Image.open(os.path.join(output_path, filename))
-  
-    ocr_text = pytesseract.image_to_string(image, lang='fas')
- 
+    image_path = os.path.join(output_path, filename)
+    ocr_text = reader.readtext(image_path)[0][1]
+    ocr_text_english = unidecode(ocr_text)
+
     print(f"True text: {true_text}")
     print(f"OCR text: {ocr_text}")
-    
-    accuracy = ocr_accuracy(true_text, ocr_text)
+    print(f"English OCR text: {ocr_text_english}")
+
+    accuracy = ocr_accuracy(true_text, ocr_text_english)
     print(f"Accuracy: {accuracy:.2f}%")
     print("-" * 20)
-    
+
     accuracy_scores.append(accuracy)
 
 average_accuracy = sum(accuracy_scores) / len(accuracy_scores)
