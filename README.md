@@ -1,1 +1,1 @@
-# Designing a system for producing Persian numerals font
+# Designing a system for producing Persian numbers font
